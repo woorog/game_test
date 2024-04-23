@@ -53,6 +53,8 @@ class _GamePageState extends State<GamePage> {
   late final MyGame _game;
   RealtimeChannel? _gameChannel;
 
+
+  //조이패드 추가 부분
   @override
   Widget build(BuildContext context) {
     return Scaffold(

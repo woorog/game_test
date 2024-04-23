@@ -16,6 +16,7 @@ class Joypad extends StatefulWidget {
 class JoypadState extends State<Joypad> {
   Direction direction = Direction.none;
   Offset delta = Offset.zero;
+  bool isPressed = false; // 조이스틱이 눌린 상태관리
 
   @override
   Widget build(BuildContext context) {
@@ -24,36 +25,50 @@ class JoypadState extends State<Joypad> {
       width: 120,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[800], // 조이패드 배경
+          color: Colors.grey[800],
           borderRadius: BorderRadius.circular(60),
-          border: Border.all(color: Colors.white, width: 2), // 테두리
+          border: Border.all(color: Colors.white, width: 2),
         ),
         child: GestureDetector(
-          onPanDown: onDragDown,
-          onPanUpdate: onDragUpdate,
-          onPanEnd: onDragEnd,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue[300], // 조이스틱 색상
-              borderRadius: BorderRadius.circular(60),
-            ),
-            child: Center(
-              child: Transform.translate(
-                offset: delta,
-                child: SizedBox(
-                  height: 60,
-                  width: 60,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white, // 조이스틱 내부 버튼 색상
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                ),
-              ),
+          onPanStart: _handlePanStart,
+          onPanUpdate: _handlePanUpdate,
+          onPanEnd: _handlePanEnd,
+          child: Transform.translate(
+            offset: delta,
+            child: CircleAvatar(
+              backgroundColor: Colors.blue[300],
+              radius: 30,
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  //4-23 수정중 gpt 제한으로 여기까지 아래 핸들러부분을 플레이어,게임 쪽에 구현해줘야 함
+  //수정사항 예정은 조이스틱 움직였을때 미러에 반영 하는거 필요함
+  void _handlePanStart(DragStartDetails details) {
+    isPressed = true;
+    _updateMovement(details.localPosition);
+  }
+
+  void _handlePanUpdate(DragUpdateDetails details) {
+    if (isPressed) {
+      _updateMovement(details.localPosition);
+    }
+  }
+
+  void _handlePanEnd(DragEndDetails details) {
+    isPressed = false;
+    updateDelta(Offset.zero); // 조이스틱을 중앙으로 리셋
+  }
+
+  void _updateMovement(Offset localPosition) {
+    final newDelta = localPosition - const Offset(60, 60); // 조이스틱 중심을 기준으로 계산
+    updateDelta(
+      Offset.fromDirection(
+        newDelta.direction,
+        min(30, newDelta.distance),
       ),
     );
   }

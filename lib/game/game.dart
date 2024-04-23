@@ -160,6 +160,7 @@ class MyGame extends FlameGame with PanDetector, HasCollisionDetection {
     onGameOver(playerWon);
   }
 
+  // joypad 게임 상태
   void handleJoypadDirection(Direction direction) {
     Vector2 movement = Vector2.zero();
     switch (direction) {

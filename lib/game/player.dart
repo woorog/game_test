@@ -9,6 +9,8 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
 
   late final Vector2 initialPosition;
+  // 조이스틱 이동을 위한 타이머 설정
+  Timer? moveTimer;
 
   Player({required bool isMe}) : _isMyPlayer = isMe;
 
