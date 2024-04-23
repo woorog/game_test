@@ -15,15 +15,13 @@ class MyGame extends FlameGame with PanDetector, HasCollisionDetection {
   });
 
   static const _initialHealthPoints = 100;
-
   /// Callback to notify the parent when the game ends.
   final void Function(bool didWin) onGameOver;
-
   /// Callback for when the game state updates.
   final void Function(
-    Vector2 position,
-    int health,
-  ) onGameStateUpdate;
+      Vector2 position,
+      int health,
+      ) onGameStateUpdate;
 
   /// `Player` instance of the player
   late Player _player;
@@ -38,6 +36,9 @@ class MyGame extends FlameGame with PanDetector, HasCollisionDetection {
   late final flame_image.Image _playerBulletImage;
   late final flame_image.Image _opponentBulletImage;
 
+  // 월드의 크기를 크게 정의합니다.
+  static final Vector2 _worldSize = Vector2(4000, 2000); // 더 큰 크기로 조정
+
   @override
   Color backgroundColor() {
     return Colors.transparent;
@@ -46,13 +47,13 @@ class MyGame extends FlameGame with PanDetector, HasCollisionDetection {
   @override
   Future<void>? onLoad() async {
     final playerImage = await images.load('player.png');
-    _player = Player(isMe: true);
+    _player = Player(isMe: true, initialPosition: Vector2(_worldSize.x * 0.25, _worldSize.y / 2));
     final spriteSize = Vector2.all(Player.radius * 2);
     _player.add(SpriteComponent(sprite: Sprite(playerImage), size: spriteSize));
     add(_player);
 
     final opponentImage = await images.load('opponent.png');
-    _opponent = Player(isMe: false);
+    _opponent = Player(isMe: false, initialPosition: Vector2(_worldSize.x * 0.75, _worldSize.y / 2));
     _opponent.add(SpriteComponent.fromImage(opponentImage, size: spriteSize));
     add(_opponent);
 
@@ -64,7 +65,7 @@ class MyGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   @override
   void onPanUpdate(DragUpdateInfo info) {
-    _player.move(info.delta.global);
+    _player.move(info.delta.global * (_worldSize.x / 2000)); // 이동 속도를 맵 크기에 비례하도록 조정
     final mirroredPosition = _player.getMirroredPercentPosition();
     onGameStateUpdate(mirroredPosition, _playerHealthPoint);
     super.onPanUpdate(info);
@@ -92,11 +93,11 @@ class MyGame extends FlameGame with PanDetector, HasCollisionDetection {
   void startNewGame() {
     isGameOver = false;
     _playerHealthPoint = _initialHealthPoints;
+    _player.position = Vector2(_worldSize.x * 0.25, _worldSize.y / 2); // 초기 위치 조정
+    _opponent.position = Vector2(_worldSize.x * 0.75, _worldSize.y / 2);
 
     for (final child in children) {
-      if (child is Player) {
-        child.position = child.initialPosition;
-      } else if (child is Bullet) {
+      if (child is Bullet) {
         child.removeFromParent();
       }
     }
@@ -104,55 +105,35 @@ class MyGame extends FlameGame with PanDetector, HasCollisionDetection {
     _shootBullets();
   }
 
-  /// shoots out bullets form both the player and the opponent.
-  ///
-  /// Calls itself every 500 milliseconds
   Future<void> _shootBullets() async {
     await Future.delayed(const Duration(milliseconds: 500));
-
-    /// Player's bullet
-    final playerBulletInitialPosition = Vector2.copy(_player.position)
-      ..y -= Player.radius;
-    final playerBulletVelocities = [
-      Vector2(0, -100),
-      Vector2(60, -80),
-      Vector2(-60, -80),
-    ];
-    for (final bulletVelocity in playerBulletVelocities) {
-      add((Bullet(
-        isMine: true,
-        velocity: bulletVelocity,
-        image: _playerBulletImage,
-        initialPosition: playerBulletInitialPosition,
-      )));
-    }
-
-    /// Opponent's bullet
-    final opponentBulletInitialPosition = Vector2.copy(_opponent.position)
-      ..y += Player.radius;
-    final opponentBulletVelocities = [
-      Vector2(0, 100),
-      Vector2(60, 80),
-      Vector2(-60, 80),
-    ];
-    for (final bulletVelocity in opponentBulletVelocities) {
-      add((Bullet(
-        isMine: false,
-        velocity: bulletVelocity,
-        image: _opponentBulletImage,
-        initialPosition: opponentBulletInitialPosition,
-      )));
-    }
-
+    addBullets(_player, _playerBulletImage, true);
+    addBullets(_opponent, _opponentBulletImage, false);
     _shootBullets();
   }
 
+  void addBullets(Player player, flame_image.Image bulletImage, bool isMine) {
+    final bulletInitialPosition = Vector2.copy(player.position) + Vector2(0, isMine ? -Player.radius : Player.radius);
+    final bulletVelocities = [
+      Vector2(0, isMine ? -200 : 200), // 속도 조정
+      Vector2(120, isMine ? -160 : 160), // 속도 조정
+      Vector2(-120, isMine ? -160 : 160), // 속도 조정
+    ];
+    for (final velocity in bulletVelocities) {
+      add(Bullet(
+        isMine: isMine,
+        velocity: velocity,
+        image: bulletImage,
+        initialPosition: bulletInitialPosition,
+      ));
+    }
+  }
+
   void updateOpponent({required Vector2 position, required int health}) {
-    _opponent.position = Vector2(size.x * position.x, size.y * position.y);
+    _opponent.position = Vector2(_worldSize.x * position.x, _worldSize.y * position.y);
     _opponent.updateHealth(health / _initialHealthPoints);
   }
 
-  /// Called when either the player or the opponent has run out of health points
   void endGame(bool playerWon) {
     isGameOver = true;
     onGameOver(playerWon);

@@ -10,7 +10,7 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
 
   late final Vector2 initialPosition;
 
-  Player({required bool isMe}) : _isMyPlayer = isMe;
+  Player({required bool isMe, required Vector2 initialPosition}) : _isMyPlayer = isMe;
 
   /// Whether it's me or the opponent
   final bool _isMyPlayer;
