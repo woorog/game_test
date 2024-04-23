@@ -10,12 +10,12 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
 
   late final Vector2 initialPosition;
 
-  Player({required bool isMe, required Vector2 initialPosition}) : _isMyPlayer = isMe;
+  Player({required bool isMe}) : _isMyPlayer = isMe;
 
   /// Whether it's me or the opponent
   final bool _isMyPlayer;
 
-  static const radius = 30.0;
+  static const radius = 20.0;
 
   @override
   Future<void>? onLoad() async {
@@ -36,6 +36,7 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
  // 화면 밖으로 나가지 않게 수정
   void move(Vector2 delta) {
     Vector2 newPosition = position + delta;
+    // 화면 밖으로 나가지 않도록 위치를 제한합니다.
     newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
     position = newPosition;
   }
@@ -103,4 +104,5 @@ class _Gauge extends PositionComponent {
                   ? Colors.orange
                   : Colors.red);
   }
+
 }

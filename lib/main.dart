@@ -5,6 +5,8 @@ import 'package:flutter/services.dart'; // SystemChrome을 사용하기 위해 �
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import 'components/joypad.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // UI 바인딩을 초기화합니다.
 
@@ -58,7 +60,15 @@ class _GamePageState extends State<GamePage> {
         fit: StackFit.expand,
         children: [
           Image.asset('assets/images/background.jpg', fit: BoxFit.cover),
-          GameWidget(game: _game),
+          GameWidget(game: _game),  // 게임 위젯
+          Positioned(
+            left: 20,   // 화면 왼쪽에서 20픽셀
+            bottom: 20, // 화면 하단에서 20픽셀
+            child: Joypad(onDirectionChanged: (direction) {
+              // 조이패드 입력에 따라 게임 내 방향을 변경
+              _game.handleJoypadDirection(direction);
+            }),
+          ),
         ],
       ),
     );
@@ -235,3 +245,55 @@ class _LobbyDialogState extends State<_LobbyDialog> {
     );
   }
 }
+//
+// class GameScreen extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     final myGame = MyGame(
+//       onGameOver: (bool didWin) {
+//         showDialog(
+//           context: context,
+//           builder: (BuildContext context) => AlertDialog(
+//             title: Text(didWin ? "Congratulations! You won!" : "Game Over. You lost."),
+//             actions: <Widget>[
+//               TextButton(
+//                 onPressed: () {
+//                   Navigator.of(context).pop();
+//                 },
+//                 child: Text('Close'),
+//               ),
+//             ],
+//           ),
+//         );
+//       },
+//       onGameStateUpdate: (Vector2 position, int health) {
+//         print("Player position: $position, Health: $health");
+//       },
+//     );
+//
+//     return Scaffold(
+//       body: Stack(
+//         children: [
+//           GameWidget(
+//               game: myGame,
+//               overlayBuilderMap: {
+//                 'joypad': (context, game) => Joypad(onDirectionChanged: (direction) {
+//                   // 여기에서 조이패드 입력을 처리하도록 게임 로직에 연동
+//                   myGame.handleJoypadDirection(direction);
+//                 }),
+//               },
+//               initialActiveOverlays: const ['joypad']  // Joypad 오버레이 활성화
+//           ),
+//           Positioned(
+//             bottom: 20,  // 화면 하단에서 20픽셀
+//             right: 20,   // 화면 우측에서 20픽셀
+//             child: Joypad(onDirectionChanged: (direction) {
+//               // Joypad 입력에 따라 방향을 처리
+//               myGame.handleJoypadDirection(direction);
+//             }),
+//           )
+//         ],
+//       ),
+//     );
+//   }
+// }
